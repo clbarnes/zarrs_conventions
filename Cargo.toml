@@ -1,12 +1,13 @@
-[package]
-name = "zarrs_conventions"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+members = ["zarrs_conventions", "zarrs_conventions_license"]
+default-members = ["zarrs_conventions"]
+resolver = "3"
 
-[dependencies]
-ctor = { version = "0.6.3", default-features = false, features = ["__no_warn_on_missing_unsafe", "proc_macro"] }
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 iref = { version = "3.2.2", features = ["macros", "serde"] }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-thiserror = "2.0.17"
-uuid = { version = "1.19.0", features = ["serde"] }
+ctor = { version = "0.6.3", default-features = false, features = [
+    "__no_warn_on_missing_unsafe",
+    "proc_macro",
+] }

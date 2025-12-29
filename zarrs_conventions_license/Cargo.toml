@@ -1,0 +1,11 @@
+[package]
+name = "zarrs_conventions_license"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+zarrs_conventions = { path = "../zarrs_conventions" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+iref = { workspace = true }
+ctor = { workspace = true }
