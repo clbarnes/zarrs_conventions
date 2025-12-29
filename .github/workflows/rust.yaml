@@ -4,7 +4,6 @@ name: "rust crate"
 defaults:
   run:
     shell: bash
-    working-directory: rust
 
 jobs:
   lint:
