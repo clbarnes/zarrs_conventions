@@ -20,7 +20,7 @@ use zarrs_conventions::{uuid, iref};
 /// <https://github.com/zarr-conventions/zarr-conventions-spec>
 #[derive(Debug, serde::Deserialize, serde::Serialize, PartialEq)]
 struct Proj {
-    code: String,
+    pub code: String,
 }
 
 impl ZarrConventionImpl for Proj {
@@ -81,7 +81,7 @@ let attributes = json!(
 struct Nested;
 struct Prefixed;
 struct Either;
-// We don't need to have defined the final "something_else" convention; the parser will just treat it as unstructured.
+// We don't have to define the final "something_else" convention; the parser will just treat it as unstructured.
 
 let parser: AttributesParser = serde_json::from_value(attributes);
 
@@ -101,12 +101,12 @@ let builder = AttributesBuilder::default();
 // At least one of uuid, spec_url, schema_url must remain true.
 builder.name(false).description(false);
 
-// The "zarr_conventions" field will be populated automatically
+// The list of zarr_conventions will be populated automatically
 // when conventional metadata is added.
 builder.add_nested(maybe_nested.unwrap()).unwrap();
 builder.add_prefixed(maybe_prefixed.unwrap()).unwrap();
 // For conventional metadata which can be represented either way,
-// you have to pick one when deserialising.
+// you have to pick one when serialising.
 builder.add_nested(maybe_either.unwrap()).unwrap();
 
 // You can add arbitrary attributes
