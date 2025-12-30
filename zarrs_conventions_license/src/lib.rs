@@ -112,7 +112,10 @@ impl LicenseItem {
 
     /// Create a new license item from an SPDX identifier.
     pub fn new_spdx<S: Into<String>>(identifier: S) -> Self {
-        Self(LicenseItemInner { spdx: Some(identifier.into()), ..Default::default() })
+        Self(LicenseItemInner {
+            spdx: Some(identifier.into()),
+            ..Default::default()
+        })
     }
 
     /// License as an SPDX identifier.
@@ -123,7 +126,10 @@ impl LicenseItem {
 
     /// Create a new license item from a URL to the license text.
     pub fn new_url(url: UriBuf) -> Self {
-        Self(LicenseItemInner { url: Some(url), ..Default::default() })
+        Self(LicenseItemInner {
+            url: Some(url),
+            ..Default::default()
+        })
     }
 
     /// URL to the full license text.
@@ -133,7 +139,10 @@ impl LicenseItem {
 
     /// Create a new license item from a URL to the license text.
     pub fn new_text<S: Into<String>>(text: S) -> Self {
-        Self(LicenseItemInner { text: Some(text.into()), ..Default::default() })
+        Self(LicenseItemInner {
+            text: Some(text.into()),
+            ..Default::default()
+        })
     }
 
     /// Full license text.
@@ -143,7 +152,10 @@ impl LicenseItem {
 
     /// Create a new license item from a relative path to an object containing the license text.
     pub fn new_file<S: Into<String>>(file: S) -> Self {
-        Self(LicenseItemInner { file: Some(file.into()), ..Default::default() })
+        Self(LicenseItemInner {
+            file: Some(file.into()),
+            ..Default::default()
+        })
     }
 
     /// Relative path to an object containing the full license text.
@@ -153,7 +165,10 @@ impl LicenseItem {
 
     /// Create a new license item from a relative path to a zarr node with license metadata.
     pub fn new_path<S: Into<String>>(path: S) -> Self {
-        Self(LicenseItemInner { path: Some(path.into()), ..Default::default() })
+        Self(LicenseItemInner {
+            path: Some(path.into()),
+            ..Default::default()
+        })
     }
 
     /// Relative path to a zarr node with license metadata which also applies to this node.

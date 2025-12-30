@@ -3,11 +3,13 @@ use std::collections::BTreeSet;
 use serde::Deserialize;
 
 use crate::{
-    Attributes, FromNestedOrPrefixed, NestedRepr, PrefixedRepr, ZarrConventionImpl,
+    Attributes, NestedOrPrefixedRepr, NestedRepr, PrefixedRepr, ZarrConventionImpl,
     ZarrConventions,
     convention::{ConventionBuilder, ConventionDefinition},
 };
 
+/// Type for building zarr attributes,
+/// including conventional and unstructured metadata.
 #[derive(Debug, Clone)]
 pub struct AttributesBuilder {
     convention_definitions: BTreeSet<ConventionDefinition>,
@@ -34,26 +36,31 @@ impl Default for AttributesBuilder {
 }
 
 impl AttributesBuilder {
+    /// Whether to include the conventions' UUID.
     pub fn uuid(&mut self, enable: bool) -> &mut Self {
         self.uuid = enable;
         self
     }
 
+    /// Whether to include the conventions' schema URL.
     pub fn schema_url(&mut self, enable: bool) -> &mut Self {
         self.schema_url = enable;
         self
     }
 
+    /// Whether to include the conventions' specification URL.
     pub fn spec_url(&mut self, enable: bool) -> &mut Self {
         self.spec_url = enable;
         self
     }
 
+    /// Whether to include the conventions' name.
     pub fn name(&mut self, enable: bool) -> &mut Self {
         self.name = enable;
         self
     }
 
+    /// Whether to include the conventions' description.
     pub fn description(&mut self, enable: bool) -> &mut Self {
         self.description = enable;
         self
@@ -93,47 +100,52 @@ impl AttributesBuilder {
     }
 
     /// Build the final attributes map.
-    /// Called automatically by the [serde::Serialize] implementation.
     pub fn build(mut self) -> serde_json::Result<serde_json::Value> {
-        if !self.uuid && !self.schema_url && !self.spec_url {
+        if !self.uuid && !self.schema_url && !self.spec_url && !self.convention_definitions.is_empty() {
             // No convention identifiers selected, so skip adding the conventions attribute.
             return Err(serde::ser::Error::custom(
                 "At least one convention identifier (uuid, schema_url, spec_url) must be enabled",
             ));
         }
-        let conventions: serde_json::Result<Vec<serde_json::Value>> = self
-            .convention_definitions
-            .into_iter()
-            .map(|d| {
-                let mut cb = ConventionBuilder::default();
-                if self.uuid {
-                    cb = cb.uuid(d.uuid);
-                }
-                if self.schema_url {
-                    cb = cb.schema_url(d.schema_url.to_owned());
-                }
-                if self.spec_url {
-                    cb = cb.spec_url(d.spec_url.to_owned());
-                }
-                if self.name {
-                    cb = cb.name(d.name);
-                }
-                if self.description {
-                    cb = cb.description(d.description);
-                }
-                let c = cb.build().expect("convention definition should build");
-                serde_json::to_value(c)
-            })
-            .collect();
 
-        self.attributes.insert(
-            ZarrConventions::KEY.to_string(),
-            serde_json::Value::Array(conventions?),
-        );
+        if !self.convention_definitions.is_empty() {
+            let res: serde_json::Result<Vec<serde_json::Value>> = self
+                .convention_definitions
+                .into_iter()
+                .map(|d| {
+                    let mut cb = ConventionBuilder::default();
+                    if self.uuid {
+                        cb = cb.uuid(d.uuid);
+                    }
+                    if self.schema_url {
+                        cb = cb.schema_url(d.schema_url.to_owned());
+                    }
+                    if self.spec_url {
+                        cb = cb.spec_url(d.spec_url.to_owned());
+                    }
+                    if self.name {
+                        cb = cb.name(d.name);
+                    }
+                    if self.description {
+                        cb = cb.description(d.description);
+                    }
+                    let c = cb.build().expect("convention definition should build");
+                    serde_json::to_value(c)
+                })
+                .collect();
+            let conventions = res?;
+
+            self.attributes.insert(
+                ZarrConventions::KEY.to_string(),
+                serde_json::Value::Array(conventions),
+            );
+        }
+
         Ok(serde_json::Value::Object(self.attributes))
     }
 }
 
+/// Retrieve conventional and unstructured metadata from an attributes map.
 #[derive(Debug, Clone, Deserialize)]
 pub struct AttributesParser {
     #[serde(default)]
@@ -143,10 +155,14 @@ pub struct AttributesParser {
 }
 
 impl AttributesParser {
+    /// Check whether a particular convention is in use.
     pub fn in_use<T: ZarrConventionImpl>(&self) -> bool {
         T::in_use(&self.zarr_conventions)
     }
 
+    /// Parse conventional metadata from a nested representation, if supported.
+    ///
+    /// None if the convention is not listed in "zarr_conventions".
     pub fn parse_nested<T: NestedRepr>(&self) -> serde_json::Result<Option<T>> {
         if !T::in_use(&self.zarr_conventions) {
             return Ok(None);
@@ -154,6 +170,9 @@ impl AttributesParser {
         T::from_attributes_nested(&self.fields).map(Some)
     }
 
+    /// Parse conventional metadata from a prefixed representation, if supported.
+    ///
+    /// None if the convention is not listed in "zarr_conventions".
     pub fn parse_prefixed<T: PrefixedRepr>(&self) -> serde_json::Result<Option<T>> {
         if !T::in_use(&self.zarr_conventions) {
             return Ok(None);
@@ -161,13 +180,20 @@ impl AttributesParser {
         T::from_attributes_prefixed(&self.fields).map(Some)
     }
 
-    pub fn parse<T: FromNestedOrPrefixed>(&self) -> serde_json::Result<Option<T>> {
+    /// Parse conventional data from either a nested or prefixed representation,
+    /// or a mixture, if both are supported.
+    ///
+    /// None if the convention is not listed in "zarr_conventions".
+    pub fn parse<T: NestedOrPrefixedRepr>(&self) -> serde_json::Result<Option<T>> {
         if !T::in_use(&self.zarr_conventions) {
             return Ok(None);
         }
         T::from_attributes(&self.fields).map(Some)
     }
 
+    /// Get an unstructured attribute.
+    ///
+    /// None if not present.
     pub fn get<T: serde::de::DeserializeOwned>(&self, key: &str) -> serde_json::Result<Option<T>> {
         let Some(v) = self.fields.get(key).cloned() else {
             return Ok(None);

@@ -1,16 +1,18 @@
 #![doc = include_str!("../../README.md")]
 use std::collections::BTreeSet;
 
+/// Used for representing URLs.
 pub use iref;
 use iref::UriBuf;
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
+/// Used for uniquely identifying conventions.
 pub use uuid;
 use uuid::Uuid;
 
 mod attributes;
 pub use attributes::{AttributesBuilder, AttributesParser};
 mod traits;
-pub use traits::{FromNestedOrPrefixed, NestedRepr, PrefixedRepr, ZarrConventionImpl};
+pub use traits::{NestedOrPrefixedRepr, NestedRepr, PrefixedRepr, ZarrConventionImpl};
 
 mod convention;
 pub use convention::{Convention, ConventionDefinition};
@@ -24,25 +26,34 @@ mod tests;
 /// Unstructured user attributes map from a Zarr node.
 pub type Attributes = serde_json::Map<String, serde_json::Value>;
 
-/// Derived from the objects in the `zarr_conventions` attribute.
-/// e.g.
-///
-/// ```jsonc
-/// {
-///   "uuid": "2dc8d146-3932-4e08-8542-06aa0e826508",
-///   "schema_url": "https://raw.githubusercontent.com/zarr-experimental/proj-prefix/refs/tags/v1/schema.json",
-///   "spec_url": "https://github.com/zarr-experimental/proj-prefix/blob/v1/README.md",
-///   "name": "proj:",
-///   "description": "Coordinate reference system information for geospatial data, using prefix namespacing."
-/// }
-/// ```
+/// Identifier for a zarr convention.
 ///
 /// Only uuid, schema_url, and spec_url may be used to identify the convention, in that order of preference.
-#[derive(Debug, Clone, Deserialize, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Hash, PartialEq, Eq)]
 pub enum ConventionId {
     Uuid(Uuid),
     SchemaUrl(UriBuf),
     SpecUrl(UriBuf),
+}
+
+impl From<ConventionDefinition> for ConventionId {
+    fn from(value: ConventionDefinition) -> Self {
+        value.id_uuid()
+    }
+}
+
+impl From<Convention> for ConventionId {
+    fn from(value: Convention) -> Self {
+        if let Some(i) = value.uuid {
+            Self::Uuid(i)
+        } else if let Some(i) = value.schema_url {
+            Self::SchemaUrl(i)
+        } else if let Some(i) = value.spec_url {
+            Self::SpecUrl(i)
+        } else {
+            unreachable!("one identifier must be defined")
+        }
+    }
 }
 
 /// Identifiers of zarr conventions in use for this node for efficient lookups.
@@ -106,6 +117,7 @@ impl From<Uuid> for ConventionId {
 }
 
 /// Convert a flat prefixed representation into a nested representation.
+///
 /// e.g. go from
 ///
 /// ```json
@@ -113,7 +125,7 @@ impl From<Uuid> for ConventionId {
 ///   "prefix:a": "a",
 ///   "prefix:one": 1,
 ///   "prefix:object": {"somekey": "somevalue"},
-///   "otherfield": [],
+///   "otherfield": []
 /// }
 /// ```
 ///
@@ -123,7 +135,7 @@ impl From<Uuid> for ConventionId {
 /// {
 ///   "a": "a",
 ///   "one": 1,
-///   "object": {"somekey": "somevalue"},
+///   "object": {"somekey": "somevalue"}
 /// }
 /// ```
 pub fn nest_prefixed(prefix: &str, map: &Attributes, out: Attributes) -> serde_json::Value {

@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use crate::ConventionId;
 
+/// Statically-defined definition of a zarr convention.
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, PartialOrd, Eq, Ord)]
 pub struct ConventionDefinition {
     pub uuid: Uuid,
@@ -37,6 +38,7 @@ impl From<ConventionDefinition> for Convention {
     }
 }
 
+/// Partial convention definition information which could be parsed from the zarr_conventions field.
 #[derive(Debug, Clone, Serialize, PartialOrd, Ord, PartialEq, Eq)]
 pub struct Convention {
     pub(crate) uuid: Option<Uuid>,
@@ -57,10 +59,13 @@ impl<'de> Deserialize<'de> for Convention {
 }
 
 impl Convention {
+    /// Build partial convention data.
     pub fn builder() -> ConventionBuilder {
         ConventionBuilder::default()
     }
 
+    /// Get the preferred identifier for this convention data,
+    /// depending on what's available.
     pub fn id(&self) -> ConventionId {
         if let Some(uuid) = self.uuid {
             ConventionId::Uuid(uuid)
@@ -74,6 +79,8 @@ impl Convention {
     }
 }
 
+/// Builder for convention data;
+/// created with [Convention::builder].
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ConventionBuilder {
     uuid: Option<Uuid>,
@@ -84,31 +91,38 @@ pub struct ConventionBuilder {
 }
 
 impl ConventionBuilder {
+    /// Set the UUID.
     pub fn uuid(mut self, uuid: Uuid) -> Self {
         self.uuid = Some(uuid);
         self
     }
 
+    /// Set the schema URL.
     pub fn schema_url<U: Into<UriBuf>>(mut self, url: U) -> Self {
         self.schema_url = Some(url.into());
         self
     }
 
+    /// Set the specification URL.
     pub fn spec_url<U: Into<UriBuf>>(mut self, url: U) -> Self {
         self.spec_url = Some(url.into());
         self
     }
 
+    /// Set the convention name.
     pub fn name<S: Into<String>>(mut self, name: S) -> Self {
         self.name = Some(name.into());
         self
     }
 
+    /// Set the convention description.
     pub fn description<S: Into<String>>(mut self, description: S) -> Self {
         self.description = Some(description.into());
         self
     }
 
+    /// Build the convention metadata.
+    /// May fail if no identifiers are given.
     pub fn build(self) -> Result<Convention, String> {
         if self.uuid.is_none() && self.schema_url.is_none() && self.spec_url.is_none() {
             return Err("At least one of uuid, schema_url, or spec_url must be set".to_string());

@@ -26,18 +26,32 @@ pub trait ZarrConventionImpl {
     }
 }
 
-/// Struct MUST serialize to a JSON Object (i.e. map with string keys).
+/// Trait for conventional metadata which can be represented in prefixed form.
+///
+/// e.g.
+///
+/// ```json
+/// {
+///   "someprefix:a": "value1",
+///   "someprefix:b": "value2",
+///   "other_attribute": "other"
+/// }
+/// ```
+///
+/// The type MUST serialize to a JSON Object (i.e. map with string keys).
 pub trait PrefixedRepr: ZarrConventionImpl + DeserializeOwned + Serialize {
-    /// Should include delimiter, e.g. `"proj:"`.
+    /// Should include delimiter, conventionally a colon, e.g. `"proj:"`.
     const PREFIX: &'static str;
 
+    /// Read the convention metadata in prefixed form from an attribute map.
     fn from_attributes_prefixed(
-        attributes: &serde_json::Map<String, serde_json::Value>,
+        attributes: &Attributes,
     ) -> serde_json::Result<Self> {
         let nested = nest_prefixed(Self::PREFIX, attributes, Default::default());
         serde_json::from_value(nested)
     }
 
+    /// Write the convention metadata into an attribute map in prefixed form.
     fn to_attributes_prefixed(&self, output: &mut Attributes) -> serde_json::Result<()> {
         let value = serde_json::to_value(self)?;
         match value {
@@ -54,11 +68,25 @@ pub trait PrefixedRepr: ZarrConventionImpl + DeserializeOwned + Serialize {
     }
 }
 
+/// Trait for conventional metadata which can be represented in nested form.
+///
+/// e.g.
+///
+/// ```json
+/// {
+///   "somekey": { "a": "value1", "b": "value2" },
+///   "other_attribute": "other"
+/// }
+/// ```
+///
+/// The type may serialise as any kind of JSON.
 pub trait NestedRepr: ZarrConventionImpl + DeserializeOwned + Serialize {
+    /// Key under which the nested object is found.
     const KEY: &'static str;
 
+    /// Read the convention metadata in nested form from an attributes map.
     fn from_attributes_nested(
-        attributes: &serde_json::Map<String, serde_json::Value>,
+        attributes: &Attributes,
     ) -> serde_json::Result<Self> {
         let cloned = attributes
             .get(Self::KEY)
@@ -69,6 +97,7 @@ pub trait NestedRepr: ZarrConventionImpl + DeserializeOwned + Serialize {
         serde_json::from_value(cloned)
     }
 
+    /// Write the convention metadata to an attributes map in nested form.
     fn to_attributes_nested(&self, output: &mut Attributes) -> serde_json::Result<()> {
         let value = serde_json::to_value(self)?;
         output.insert(Self::KEY.to_string(), value);
@@ -81,9 +110,11 @@ pub trait NestedRepr: ZarrConventionImpl + DeserializeOwned + Serialize {
 /// If the nested representation is found and the value of the top-level key is an object,
 /// that object is combined with any prefixed keys to form the final object.
 /// Otherwise, the value of the top-level key overrides prefixed keys (all prefixed keys are ignored).
-pub trait FromNestedOrPrefixed: NestedRepr + PrefixedRepr {
+pub trait NestedOrPrefixedRepr: NestedRepr + PrefixedRepr {
+    /// Read convention metadata from an attributes map,
+    /// in either prefixed or nested form, or a combination.
     fn from_attributes(
-        attributes: &serde_json::Map<String, serde_json::Value>,
+        attributes: &Attributes,
     ) -> serde_json::Result<Self> {
         if let Some(cloned) = attributes.get(Self::KEY).cloned() {
             if let serde_json::Value::Object(m) = cloned {
@@ -97,7 +128,7 @@ pub trait FromNestedOrPrefixed: NestedRepr + PrefixedRepr {
     }
 }
 
-impl<T: NestedRepr + PrefixedRepr> FromNestedOrPrefixed for T {}
+impl<T: NestedRepr + PrefixedRepr> NestedOrPrefixedRepr for T {}
 
 #[cfg(test)]
 mod tests {
@@ -107,7 +138,7 @@ mod tests {
     use serde_json::json;
 
     use crate::{
-        Attributes, FromNestedOrPrefixed, NestedRepr, PrefixedRepr, ZarrConventionImpl,
+        Attributes, NestedOrPrefixedRepr, NestedRepr, PrefixedRepr, ZarrConventionImpl,
         ZarrConventions, convention::ConventionDefinition,
     };
 

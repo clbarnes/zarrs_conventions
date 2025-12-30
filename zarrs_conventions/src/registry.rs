@@ -1,3 +1,4 @@
+//! Utilities relating to a runtime-accessible registry of accessible conventions.
 use std::{
     collections::BTreeMap,
     sync::{LazyLock, RwLock},
@@ -8,9 +9,14 @@ use uuid::Uuid;
 
 use crate::{ConventionId, ZarrConventionImpl, convention::ConventionDefinition};
 
+/// Global registry of accessible zarr conventions,
+/// queryable at runtime.
+///
+/// Register your conventions with the [register_zarr_conventions!] macro.
 pub static DEFAULT_ZARR_CONVENTION_REGISTRY: LazyLock<ConventionRegistry> =
     LazyLock::new(Default::default);
 
+/// Registry of zarr conventions.
 #[derive(Debug, Default)]
 pub struct ConventionRegistry {
     inner: RwLock<ConventionRegistryInner>,
@@ -89,11 +95,13 @@ impl ConventionRegistry {
         Ok(self)
     }
 
+    /// Get a vec of registered conventions.
     pub fn conventions(&self) -> Vec<ConventionDefinition> {
         let inner = self.inner.read().expect("RwLock poisoned");
         inner.uuid_reg.values().cloned().collect()
     }
 
+    /// Check whether a given convention is registered.
     pub fn contains(&self, id: &ConventionId) -> bool {
         let inner = self.inner.read().expect("RwLock poisoned");
         match id {
@@ -103,6 +111,7 @@ impl ConventionRegistry {
         }
     }
 
+    /// Get the definition for a given convention.
     pub fn get(&self, id: &ConventionId) -> Option<ConventionDefinition> {
         let inner = self.inner.read().expect("RwLock poisoned");
         match id {
@@ -114,43 +123,57 @@ impl ConventionRegistry {
 }
 
 /// Register conventions in the default registry.
-/// Multiple conventions can be registered at once.
-/// This macro can only be called once per module.
+///
+/// This macro can only be called once per module; multiple conventions can be registered in one invocation.
 ///
 /// Panics if registration fails (for example, due to duplicate identifiers).
 ///
-/// ## Example
-///
 /// ```
 /// use zarrs_conventions::{uuid, iref};
-/// use zarrs_conventions::{DEFAULT_ZARR_CONVENTION_REGISTRY, ZarrConventionImpl, ConventionDefinition, register_zarr_conventions};
+/// use zarrs_conventions::{
+///     DEFAULT_ZARR_CONVENTION_REGISTRY, ZarrConventionImpl,
+///     ConventionDefinition, register_zarr_conventions,
+/// };
 ///
 /// #[derive(serde::Serialize, serde::Deserialize)]
-/// pub struct MyConvention { foo: String };
+/// pub struct Foo { foo: String };
 ///
-/// impl ZarrConventionImpl for MyConvention {
+/// impl ZarrConventionImpl for Foo {
 ///    const DEFINITION: ConventionDefinition = ConventionDefinition {
 ///        uuid: uuid::uuid!("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
-///        schema_url: iref::uri!("https://example.com/schemas/my_convention.json"),
-///        spec_url: iref::uri!("https://example.com/specs/my_convention"),
-///        name: "my_convention",
-///        description: "An example convention.",
+///        schema_url: iref::uri!("https://example.com/schemas/foo.json"),
+///        spec_url: iref::uri!("https://example.com/specs/foo"),
+///        name: "foo",
+///        description: "Foo.",
 ///    };
 /// }
 ///
-/// register_zarr_conventions!(MyConvention);
+/// #[derive(serde::Serialize, serde::Deserialize)]
+/// pub struct Bar { bar: String };
+///
+/// impl ZarrConventionImpl for Bar {
+///    const DEFINITION: ConventionDefinition = ConventionDefinition {
+///        uuid: uuid::uuid!("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+///        schema_url: iref::uri!("https://example.com/schemas/bar.json"),
+///        spec_url: iref::uri!("https://example.com/specs/bar"),
+///        name: "bar",
+///        description: "Bar.",
+///    };
+/// }
+///
+/// register_zarr_conventions!(Foo, Bar);
 /// ```
 #[macro_export]
 macro_rules! register_zarr_conventions {
     ($($convention:ty),+) => {
-        $(
-            #[ctor::ctor]
-            fn register_convention() {
+        #[ctor::ctor]
+        fn register_conventions() {
+            $(
                 $crate::DEFAULT_ZARR_CONVENTION_REGISTRY.register::<$convention>().map_err(|e|
                     panic!("Failed to register convention {}: {}", stringify!($convention), e)
                 );
-            }
-        )+
+            )+
+        }
     };
 }
 
