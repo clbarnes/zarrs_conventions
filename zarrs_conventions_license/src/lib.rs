@@ -7,77 +7,21 @@ use zarrs_conventions::{
     register_zarr_conventions, uuid,
 };
 
-/// Type representing zero or more licenses applicable to the data.
-///
-/// ```
-/// use zarrs_conventions_license::{License, LicenseItem};
-///
-/// let single: License = LicenseItem::new_spdx("MIT").into();
-/// let multi = License::from_iter([
-///     LicenseItem::new_url("https://opensource.org/license/BSD-3-Clause".parse().unwrap()),
-///     LicenseItem::new_spdx("Apache-2.0"),
-/// ]);
-/// ```
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[serde(transparent)]
-pub struct License(Vec<LicenseItem>);
-
-impl AsRef<[LicenseItem]> for License {
-    fn as_ref(&self) -> &[LicenseItem] {
-        &self.0
-    }
-}
-
-impl License {
-    /// Get a mutable reference to the inner vec of license items.
-    pub fn inner_mut(&mut self) -> &mut Vec<LicenseItem> {
-        &mut self.0
-    }
-}
-
-impl From<Vec<LicenseItem>> for License {
-    fn from(value: Vec<LicenseItem>) -> Self {
-        Self(value)
-    }
-}
-
-impl IntoIterator for License {
-    type Item = LicenseItem;
-
-    type IntoIter = std::vec::IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
-    }
-}
-
-impl FromIterator<LicenseItem> for License {
-    fn from_iter<T: IntoIterator<Item = LicenseItem>>(iter: T) -> Self {
-        Self(iter.into_iter().collect())
-    }
-}
-
-impl From<LicenseItem> for License {
-    fn from(value: LicenseItem) -> Self {
-        Self(vec![value])
-    }
-}
-
 /// Single license applicable to the data.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(try_from = "LicenseItemInner", into = "LicenseItemInner")]
-pub struct LicenseItem(LicenseItemInner);
+#[serde(try_from = "Inner", into = "Inner")]
+pub struct License(Inner);
 
-impl From<LicenseItem> for LicenseItemInner {
-    fn from(value: LicenseItem) -> Self {
+impl From<License> for Inner {
+    fn from(value: License) -> Self {
         value.0
     }
 }
 
-impl TryFrom<LicenseItemInner> for LicenseItem {
+impl TryFrom<Inner> for License {
     type Error = String;
 
-    fn try_from(value: LicenseItemInner) -> Result<Self, Self::Error> {
+    fn try_from(value: Inner) -> Result<Self, Self::Error> {
         if value.spdx.is_none()
             && value.url.is_none()
             && value.text.is_none()
@@ -86,12 +30,14 @@ impl TryFrom<LicenseItemInner> for LicenseItem {
         {
             return Err("At least one field must be set for LicenseItem".to_string());
         }
-        Ok(LicenseItem(value))
+        Ok(License(value))
     }
 }
 
+/// Inner type used by the [License] and [Builder] types.
+/// May contain incomplete or invalid data (i.e. no identifier).
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-struct LicenseItemInner {
+struct Inner {
     #[serde(skip_serializing_if = "Option::is_none")]
     spdx: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -104,15 +50,15 @@ struct LicenseItemInner {
     path: Option<String>,
 }
 
-impl LicenseItem {
-    /// Builder for constructing a [LicenseItem].
-    pub fn builder() -> LicenseItemBuilder {
-        LicenseItemBuilder::default()
+impl License {
+    /// Builder for constructing a [License].
+    pub fn builder() -> Builder {
+        Builder::default()
     }
 
     /// Create a new license item from an SPDX identifier.
     pub fn new_spdx<S: Into<String>>(identifier: S) -> Self {
-        Self(LicenseItemInner {
+        Self(Inner {
             spdx: Some(identifier.into()),
             ..Default::default()
         })
@@ -126,7 +72,7 @@ impl LicenseItem {
 
     /// Create a new license item from a URL to the license text.
     pub fn new_url(url: UriBuf) -> Self {
-        Self(LicenseItemInner {
+        Self(Inner {
             url: Some(url),
             ..Default::default()
         })
@@ -139,7 +85,7 @@ impl LicenseItem {
 
     /// Create a new license item from a URL to the license text.
     pub fn new_text<S: Into<String>>(text: S) -> Self {
-        Self(LicenseItemInner {
+        Self(Inner {
             text: Some(text.into()),
             ..Default::default()
         })
@@ -152,7 +98,7 @@ impl LicenseItem {
 
     /// Create a new license item from a relative path to an object containing the license text.
     pub fn new_file<S: Into<String>>(file: S) -> Self {
-        Self(LicenseItemInner {
+        Self(Inner {
             file: Some(file.into()),
             ..Default::default()
         })
@@ -165,7 +111,7 @@ impl LicenseItem {
 
     /// Create a new license item from a relative path to a zarr node with license metadata.
     pub fn new_path<S: Into<String>>(path: S) -> Self {
-        Self(LicenseItemInner {
+        Self(Inner {
             path: Some(path.into()),
             ..Default::default()
         })
@@ -189,35 +135,37 @@ impl ZarrConventionImpl for License {
     };
 }
 
-impl NestedRepr for License {
+impl NestedRepr for License{
     const KEY: &'static str = "license";
 }
 
 register_zarr_conventions!(License);
 
-/// Builder for [LicenseItem]s, created by [LicenseItem::builder].
+/// Builder for [License]s, created by [License::builder].
 ///
 /// At least one license identifier must be set.
 /// It is recommended to only set one.
 /// In order of preference, `spdx > url > text > file > path`.
 ///
-/// ## Examples
-///
 /// ```
-/// use zarrs_conventions_license::LicenseItem;
+/// use zarrs_conventions_license::License;
 ///
-/// let item = LicenseItem::builder().spdx("MIT").url("https://opensource.org/license/mit".parse().unwrap()).build().unwrap();
+/// let item = License::builder()
+///     .spdx("MIT")
+///     .url("https://opensource.org/license/mit".parse().unwrap())
+///     .build()
+///     .unwrap();
 /// ```
 #[derive(Debug, Clone)]
-pub struct LicenseItemBuilder {
-    inner: LicenseItemInner,
+pub struct Builder {
+    inner: Inner,
     short: bool,
 }
 
-impl Default for LicenseItemBuilder {
+impl Default for Builder {
     fn default() -> Self {
         Self {
-            inner: LicenseItemInner {
+            inner: Inner {
                 spdx: None,
                 url: None,
                 text: None,
@@ -229,7 +177,7 @@ impl Default for LicenseItemBuilder {
     }
 }
 
-impl LicenseItemBuilder {
+impl Builder {
     /// Shorten the license metadata by only keeping the most preferred form.
     pub fn short(mut self, short: bool) -> Self {
         self.short = short;
@@ -274,7 +222,7 @@ impl LicenseItemBuilder {
 
     /// Build the license item.
     /// Fails if no specifiers are set.
-    pub fn build(mut self) -> Result<LicenseItem, String> {
+    pub fn build(mut self) -> Result<License, String> {
         if self.short {
             let mut none = false;
             if self.inner.spdx.is_some() {
@@ -311,7 +259,7 @@ mod tests {
         ZarrConventionImpl,
     };
 
-    use crate::{License, LicenseItem};
+    use crate::License;
 
     #[test]
     fn is_registered() {
@@ -335,21 +283,17 @@ mod tests {
     fn pass_expected() {
         let value = json!({
             "zarr_conventions": [{"uuid": License::DEFINITION.uuid}],
-            "license": [
-                {"spdx": "MIT"},
-            ]
+            "license": {"spdx": "MIT"}
         });
         let parser: AttributesParser = serde_json::from_value(value).unwrap();
-        let _license: License = parser.parse_nested().unwrap().unwrap();
+        let _license: License= parser.parse_nested().unwrap().unwrap();
     }
 
     #[test]
     fn fail_empty() {
         let value = json!({
             "zarr_conventions": [{"uuid": License::DEFINITION.uuid}],
-            "license": [
-                {},
-            ]
+            "license": {}
         });
         let parser: AttributesParser = serde_json::from_value(value).unwrap();
         assert!(parser.parse_nested::<License>().is_err());
@@ -357,7 +301,7 @@ mod tests {
 
     #[test]
     fn can_build() {
-        let license = License::from_iter([LicenseItem::builder().spdx("MIT").build().unwrap()]);
+        let license = License::builder().spdx("MIT").build().unwrap();
         let mut builder = AttributesBuilder::default();
         builder.add_nested(&license).unwrap();
         let _attrs = builder.build().unwrap();
