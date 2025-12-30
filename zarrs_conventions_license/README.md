@@ -14,8 +14,8 @@ use zarrs_conventions_license::{
 
 let license = License::from_iter([
     LicenseItem::new_spdx("MIT"),
-    LicenseItem::new_url("https://www.apache.org/licenses/LICENSE-2.0.txt"),
+    LicenseItem::new_url("https://www.apache.org/licenses/LICENSE-2.0.txt".parse().unwrap()),
 ]);
 
-let spdx = license.spdx().unwrap();
+let spdx = license.as_ref()[0].spdx().unwrap();
 ```

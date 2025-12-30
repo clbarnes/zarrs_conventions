@@ -11,11 +11,10 @@ use zarrs_conventions::{
 ///
 /// ```
 /// use zarrs_conventions_license::{License, LicenseItem};
-/// use iref::uri;
 ///
 /// let single: License = LicenseItem::new_spdx("MIT").into();
 /// let multi = License::from_iter([
-///     LicenseItem::new_url(uri!("https://opensource.org/license/BSD-3-Clause").to_owned()),
+///     LicenseItem::new_url("https://opensource.org/license/BSD-3-Clause".parse().unwrap()),
 ///     LicenseItem::new_spdx("Apache-2.0"),
 /// ]);
 /// ```
@@ -191,9 +190,8 @@ register_zarr_conventions!(License);
 ///
 /// ```
 /// use zarrs_conventions_license::LicenseItem;
-/// use iref::uri;
 ///
-/// let item = LicenseItem::builder().spdx("MIT").url(uri!("https://opensource.org/license/mit").to_owned()).build().unwrap();
+/// let item = LicenseItem::builder().spdx("MIT").url("https://opensource.org/license/mit".parse().unwrap()).build().unwrap();
 /// ```
 #[derive(Debug, Clone)]
 pub struct LicenseItemBuilder {
