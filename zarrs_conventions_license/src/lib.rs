@@ -135,7 +135,7 @@ impl ZarrConventionImpl for License {
     };
 }
 
-impl NestedRepr for License{
+impl NestedRepr for License {
     const KEY: &'static str = "license";
 }
 
@@ -286,7 +286,7 @@ mod tests {
             "license": {"spdx": "MIT"}
         });
         let parser: AttributesParser = serde_json::from_value(value).unwrap();
-        let _license: License= parser.parse_nested().unwrap().unwrap();
+        let _license: License = parser.parse_nested().unwrap().unwrap();
     }
 
     #[test]
