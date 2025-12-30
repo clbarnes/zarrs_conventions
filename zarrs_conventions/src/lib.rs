@@ -4,7 +4,7 @@ use std::collections::BTreeSet;
 /// Used for representing URLs.
 pub use iref;
 use iref::UriBuf;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 /// Used for uniquely identifying conventions.
 pub use uuid;
 use uuid::Uuid;

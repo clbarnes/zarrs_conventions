@@ -44,9 +44,7 @@ pub trait PrefixedRepr: ZarrConventionImpl + DeserializeOwned + Serialize {
     const PREFIX: &'static str;
 
     /// Read the convention metadata in prefixed form from an attribute map.
-    fn from_attributes_prefixed(
-        attributes: &Attributes,
-    ) -> serde_json::Result<Self> {
+    fn from_attributes_prefixed(attributes: &Attributes) -> serde_json::Result<Self> {
         let nested = nest_prefixed(Self::PREFIX, attributes, Default::default());
         serde_json::from_value(nested)
     }
@@ -85,9 +83,7 @@ pub trait NestedRepr: ZarrConventionImpl + DeserializeOwned + Serialize {
     const KEY: &'static str;
 
     /// Read the convention metadata in nested form from an attributes map.
-    fn from_attributes_nested(
-        attributes: &Attributes,
-    ) -> serde_json::Result<Self> {
+    fn from_attributes_nested(attributes: &Attributes) -> serde_json::Result<Self> {
         let cloned = attributes
             .get(Self::KEY)
             .ok_or_else(|| {
@@ -113,9 +109,7 @@ pub trait NestedRepr: ZarrConventionImpl + DeserializeOwned + Serialize {
 pub trait NestedOrPrefixedRepr: NestedRepr + PrefixedRepr {
     /// Read convention metadata from an attributes map,
     /// in either prefixed or nested form, or a combination.
-    fn from_attributes(
-        attributes: &Attributes,
-    ) -> serde_json::Result<Self> {
+    fn from_attributes(attributes: &Attributes) -> serde_json::Result<Self> {
         if let Some(cloned) = attributes.get(Self::KEY).cloned() {
             if let serde_json::Value::Object(m) = cloned {
                 serde_json::from_value(nest_prefixed(Self::PREFIX, attributes, m))

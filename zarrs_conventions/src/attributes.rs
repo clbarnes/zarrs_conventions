@@ -101,7 +101,11 @@ impl AttributesBuilder {
 
     /// Build the final attributes map.
     pub fn build(mut self) -> serde_json::Result<serde_json::Value> {
-        if !self.uuid && !self.schema_url && !self.spec_url && !self.convention_definitions.is_empty() {
+        if !self.uuid
+            && !self.schema_url
+            && !self.spec_url
+            && !self.convention_definitions.is_empty()
+        {
             // No convention identifiers selected, so skip adding the conventions attribute.
             return Err(serde::ser::Error::custom(
                 "At least one convention identifier (uuid, schema_url, spec_url) must be enabled",
