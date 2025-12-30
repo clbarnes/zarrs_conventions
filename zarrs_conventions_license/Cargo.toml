@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-zarrs_conventions = { path = "../zarrs_conventions" }
+zarrs_conventions = { path = "../zarrs_conventions", version = "0.1"}
 serde = { workspace = true }
 serde_json = { workspace = true }
 iref = { workspace = true }
