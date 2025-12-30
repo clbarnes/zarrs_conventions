@@ -1,4 +1,4 @@
-#![doc = include_str!("../../README.md")]
+#![doc = include_str!("../README.md")]
 use std::collections::BTreeSet;
 
 /// Used for representing URLs.

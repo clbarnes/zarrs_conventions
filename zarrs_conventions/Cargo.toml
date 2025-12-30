@@ -2,6 +2,9 @@
 name = "zarrs_conventions"
 version = "0.1.0"
 edition = "2024"
+description = "Zarr conventions for the zarrs ecosystem"
+license = "MIT"
+repository = "https://github.com/clbarnes/zarrs_conventions"
 
 [dependencies]
 iref = { workspace = true }
