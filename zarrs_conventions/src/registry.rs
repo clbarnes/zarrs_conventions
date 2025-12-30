@@ -126,7 +126,7 @@ impl ConventionRegistry {
 /// use zarrs_conventions::{DEFAULT_ZARR_CONVENTION_REGISTRY, ZarrConventionImpl, ConventionDefinition, register_zarr_conventions};
 ///
 /// #[derive(serde::Serialize, serde::Deserialize)]
-/// pub struct MyConvention {foo: String};
+/// pub struct MyConvention { foo: String };
 ///
 /// impl ZarrConventionImpl for MyConvention {
 ///    const DEFINITION: ConventionDefinition = ConventionDefinition {
