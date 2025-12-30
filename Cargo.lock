@@ -593,7 +593,7 @@ dependencies = [
 
 [[package]]
 name = "zarrs_conventions_license"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "ctor",
  "iref",
