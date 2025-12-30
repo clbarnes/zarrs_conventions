@@ -19,9 +19,38 @@ use zarrs_conventions::{
 ///     LicenseItem::new_spdx("Apache-2.0"),
 /// ]);
 /// ```
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(transparent)]
 pub struct License(Vec<LicenseItem>);
+
+impl AsRef<[LicenseItem]> for License {
+    fn as_ref(&self) -> &[LicenseItem] {
+        &self.0
+    }
+}
+
+impl License {
+    /// Get a mutable reference to the inner vec of license items.
+    pub fn inner_mut(&mut self) -> &mut Vec<LicenseItem> {
+        &mut self.0
+    }
+}
+
+impl From<Vec<LicenseItem>> for License {
+    fn from(value: Vec<LicenseItem>) -> Self {
+        Self(value)
+    }
+}
+
+impl IntoIterator for License {
+    type Item = LicenseItem;
+
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
 
 impl FromIterator<LicenseItem> for License {
     fn from_iter<T: IntoIterator<Item = LicenseItem>>(iter: T) -> Self {
