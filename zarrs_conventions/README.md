@@ -2,8 +2,7 @@
 
 An implementation of [zarr-conventions](https://github.com/zarr-conventions) for [zarrs](https://zarrs.dev/) ecosystem.
 
-The main crate is `zarrs_conventions`;
-this repository also includes some specific conventions.
+Individual conventions should be defined in their own crates.
 
 ## Usage
 
