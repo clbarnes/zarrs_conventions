@@ -1,0 +1,9 @@
+[submodule "zarrs_conventions_uom/spec"]
+	path = zarrs_conventions_uom/spec
+	url = https://github.com/clbarnes/zarr-convention-uom.git
+[submodule "zarrs_conventions_license/spec"]
+	path = zarrs_conventions_license/spec
+	url = https://github.com/clbarnes/zarr-convention-license.git
+[submodule "zarrs_conventions/spec"]
+	path = zarrs_conventions/spec
+	url = https://github.com/zarr-conventions/zarr-conventions-spec.git

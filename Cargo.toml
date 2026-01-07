@@ -1,5 +1,5 @@
 [workspace]
-members = ["zarrs_conventions", "zarrs_conventions_license"]
+members = ["zarrs_conventions", "zarrs_conventions_license", "zarrs_conventions_uom"]
 default-members = ["zarrs_conventions"]
 resolver = "3"
 
@@ -11,3 +11,5 @@ ctor = { version = "0.6.3", default-features = false, features = [
     "__no_warn_on_missing_unsafe",
     "proc_macro",
 ] }
+rstest = "0.26.1"
+uuid = { version = "1.19.0", features = ["serde"] }

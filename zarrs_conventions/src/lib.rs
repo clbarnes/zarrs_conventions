@@ -26,6 +26,13 @@ mod tests;
 /// Unstructured user attributes map from a Zarr node.
 pub type Attributes = serde_json::Map<String, serde_json::Value>;
 
+/// Representation of Zarr metadata document for deserialising attributes.
+#[derive(Debug, Deserialize)]
+pub struct ZarrMetadata {
+    #[serde(default)]
+    pub attributes: Attributes,
+}
+
 /// Identifier for a zarr convention.
 ///
 /// Only uuid, schema_url, and spec_url may be used to identify the convention, in that order of preference.
@@ -84,6 +91,14 @@ impl ZarrConventions {
             return Ok(ZarrConventions::default());
         };
         serde_json::from_value(zc.clone())
+    }
+
+    pub fn contains(&self, id: &ConventionId) -> bool {
+        match id {
+            ConventionId::Uuid(uuid) => self.uuids.contains(uuid),
+            ConventionId::SchemaUrl(uri_buf) => self.schema_urls.contains(uri_buf),
+            ConventionId::SpecUrl(uri_buf) => self.spec_urls.contains(uri_buf),
+        }
     }
 }
 

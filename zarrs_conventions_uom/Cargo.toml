@@ -1,17 +1,17 @@
 [package]
-name = "zarrs_conventions_license"
-version = "0.1.1"
+name = "zarrs_conventions_uom"
+version = "0.1.0"
 edition = "2024"
-description = "License zarr-convention for the zarrs ecosystem"
+description = "Units of measurement zarr-convention for the zarrs ecosystem"
 license = "MIT"
 repository = "https://github.com/clbarnes/zarrs_conventions"
 
 [dependencies]
-zarrs_conventions = { path = "../zarrs_conventions", version = "0.1"}
+zarrs_conventions = { path = "../zarrs_conventions", version = "0.1" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 iref = { workspace = true }
 ctor = { workspace = true }
 
 [dev-dependencies]
-rstest = {workspace = true}
+rstest = { workspace = true }
