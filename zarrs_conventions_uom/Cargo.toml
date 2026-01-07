@@ -7,7 +7,7 @@ license = "MIT"
 repository = "https://github.com/clbarnes/zarrs_conventions"
 
 [dependencies]
-zarrs_conventions = { path = "../zarrs_conventions", version = "0.1" }
+zarrs_conventions = { path = "../zarrs_conventions", version = "0.1.1" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 iref = { workspace = true }
