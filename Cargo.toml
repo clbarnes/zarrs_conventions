@@ -1,5 +1,5 @@
 [workspace]
-members = ["zarrs_conventions", "zarrs_conventions_license", "zarrs_conventions_uom"]
+members = ["zarrs_conventions", "zarrs_conventions_license", "zarrs_conventions_thumbnails", "zarrs_conventions_uom"]
 default-members = ["zarrs_conventions"]
 resolver = "3"
 
