@@ -824,6 +824,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "zarrs_conventions_thumbnails"
+version = "0.1.0"
+dependencies = [
+ "ctor",
+ "iref",
+ "rstest",
+ "serde",
+ "serde_json",
+ "zarrs_conventions",
+]
+
+[[package]]
 name = "zarrs_conventions_uom"
 version = "0.1.0"
 dependencies = [
