@@ -1,6 +1,6 @@
 # zarrs_conventions_thumbnails
 
-Rust implementation of the [Thumbnails Zarr convention](https://github.com/zarr-conventions/thumbnails).
+Rust implementation of the [Thumbnails Zarr convention](https://github.com/clbarnes/zarr-convention-thumbnails).
 
 This convention allows a Zarr node to refer to thumbnails which represent that node in some way.
 
@@ -26,7 +26,3 @@ thumb.attributes_mut().insert("z_slice".to_string(), serde_json::json!(123));
 // Create thumbnails collection (Thumbnails derefs to Vec<Thumbnail>)
 let thumbnails: Thumbnails = vec![thumb].into();
 ```
-
-## License
-
-MIT

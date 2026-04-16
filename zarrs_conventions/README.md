@@ -6,7 +6,7 @@ Individual conventions should be defined in their own crates.
 
 ## Usage
 
-### Defining a convention convention
+### Defining a convention
 
 ```rust
 use zarrs_conventions::{
