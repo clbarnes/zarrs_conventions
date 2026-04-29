@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::num::NonZeroU32;
 use std::ops::{Deref, DerefMut};
-use zarrs_conventions::iref::{UriRefBuf};
+use zarrs_conventions::iref::UriRefBuf;
 use zarrs_conventions::{
     ConventionDefinition, NestedRepr, ZarrConventionImpl, iref::uri, register_zarr_conventions,
     uuid::uuid,
