@@ -147,13 +147,13 @@ impl Thumbnail {
     /// Returns an error if `width` or `height` is zero, or if `media_type` is empty.
     ///
     /// ```
-    /// use zarrs_conventions_thumbnails::{Thumbnail, ThumbnailLocation};
+    /// use zarrs_conventions_thumbnails::v2::Thumbnail;
     ///
     /// let thumb = Thumbnail::try_new(
     ///     96,
     ///     96,
     ///     "image/jpeg",
-    ///     ThumbnailLocation::new_path("thumbnails/thumb96.jpeg"),
+    ///     "thumbnails/thumb96.jpeg",
     /// ).unwrap();
     /// ```
     pub fn try_new(
