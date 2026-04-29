@@ -193,7 +193,7 @@ impl Thumbnail {
     /// Returns an error if `width` or `height` is zero, or if `media_type` is empty.
     ///
     /// ```
-    /// use zarrs_conventions_thumbnails::{Thumbnail, ThumbnailLocation};
+    /// use zarrs_conventions_thumbnails::v1::{Thumbnail, ThumbnailLocation};
     ///
     /// let thumb = Thumbnail::try_new(
     ///     96,
