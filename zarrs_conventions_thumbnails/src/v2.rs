@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::num::NonZeroU32;
 use std::ops::{Deref, DerefMut};
-use zarrs_conventions::iref::{UriRef, UriRefBuf};
+use zarrs_conventions::iref::{UriRefBuf};
 use zarrs_conventions::{
     ConventionDefinition, NestedRepr, ZarrConventionImpl, iref::uri, register_zarr_conventions,
     uuid::uuid,
@@ -215,7 +215,8 @@ impl Thumbnail {
         &mut self.attributes
     }
 
-    pub fn uri(&self) -> &UriRef {
+    /// Thumbnail location, guaranteed to be a URI reference.
+    pub fn uri(&self) -> &str {
         &self.uri
     }
 }
@@ -265,7 +266,7 @@ mod tests {
         let thumbnails: Thumbnails = parser.parse_nested().unwrap().unwrap();
         assert_eq!(thumbnails.len(), 1);
         assert_eq!(thumbnails[0].width().get(), 96);
-        assert_eq!(thumbnails[0].uri().as_str(), "thumbnails/thumb96.jpeg");
+        assert_eq!(thumbnails[0].uri(), "thumbnails/thumb96.jpeg");
     }
 
     #[test]
