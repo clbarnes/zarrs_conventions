@@ -7,6 +7,9 @@
 [submodule "zarrs_conventions/spec"]
 	path = zarrs_conventions/spec
 	url = https://github.com/zarr-conventions/zarr-conventions-spec.git
-[submodule "zarrs_conventions_thumbnails/spec"]
-	path = zarrs_conventions_thumbnails/spec
+[submodule "zarrs_conventions_thumbnails/specs/v1"]
+	path = zarrs_conventions_thumbnails/specs/v1
+	url = https://github.com/clbarnes/zarr-convention-thumbnails.git
+[submodule "zarrs_conventions_thumbnails/specs/v2"]
+	path = zarrs_conventions_thumbnails/specs/v2
 	url = https://github.com/clbarnes/zarr-convention-thumbnails.git

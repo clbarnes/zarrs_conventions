@@ -2,7 +2,7 @@ use rstest::rstest;
 use zarrs_conventions::{
     DEFAULT_ZARR_CONVENTION_REGISTRY, NestedRepr, ZarrConventionImpl, ZarrConventions, ZarrMetadata,
 };
-use zarrs_conventions_thumbnails::Thumbnails;
+use zarrs_conventions_thumbnails::v1::Thumbnails;
 
 #[test]
 fn is_registered() {
@@ -11,7 +11,7 @@ fn is_registered() {
 
 #[rstest]
 fn test_examples(
-    #[files("spec/examples/*.json")]
+    #[files("specs/v1/examples/*.json")]
     #[mode = bytes]
     contents: &[u8],
 ) {
