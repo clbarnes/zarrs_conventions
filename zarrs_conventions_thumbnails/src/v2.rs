@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::num::NonZeroU32;
 use std::ops::{Deref, DerefMut};
-use zarrs_conventions::iref::UriRefBuf;
+use zarrs_conventions::iref::{Scheme, UriRefBuf};
 use zarrs_conventions::{
     ConventionDefinition, NestedRepr, ZarrConventionImpl, iref::uri, register_zarr_conventions,
     uuid::uuid,
@@ -122,8 +122,34 @@ fn is_empty_map(map: &serde_json::Map<String, serde_json::Value>) -> bool {
     map.is_empty()
 }
 
+#[derive(Debug, Clone, Deserialize)]
+struct ThumbnailDeser {
+    width: u32,
+    height: u32,
+    media_type: String,
+    description: Option<String>,
+    #[serde(default)]
+    attributes: serde_json::Map<String, serde_json::Value>,
+    uri: String,
+}
+
+impl TryFrom<ThumbnailDeser> for Thumbnail {
+    type Error = String;
+
+    fn try_from(value: ThumbnailDeser) -> Result<Self, Self::Error> {
+        Thumbnail::try_new(value.width, value.height, value.media_type, value.uri).map(
+            |mut thumb| {
+                thumb.attributes = value.attributes;
+                thumb.description = value.description;
+                thumb
+            },
+        )
+    }
+}
+
 /// A single thumbnail representing a Zarr node.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(try_from = "ThumbnailDeser")]
 pub struct Thumbnail {
     /// Thumbnail pixel width as a positive integer.
     width: NonZeroU32,
@@ -144,17 +170,32 @@ pub struct Thumbnail {
 impl Thumbnail {
     /// Create a new thumbnail.
     ///
-    /// Returns an error if `width` or `height` is zero, or if `media_type` is empty.
+    /// Returns an error if
+    ///
+    /// - `width` or `height` is zero
+    /// - `media_type` is empty.
+    /// - `uri` is
+    ///   - not a valid URI reference
+    ///   - has an unsupported scheme
+    ///   - a data URI which
+    ///     - has a media type that doesn't match `media_type`
+    ///     - is not labelled as base64-encoded
+    ///   - is a relative reference which is absolute
+    ///
+    /// `attributes` and `description` can be set after construction.
     ///
     /// ```
     /// use zarrs_conventions_thumbnails::v2::Thumbnail;
+    /// use serde_json::json;
     ///
-    /// let thumb = Thumbnail::try_new(
+    /// let mut thumb = Thumbnail::try_new(
     ///     96,
     ///     96,
     ///     "image/jpeg",
     ///     "thumbnails/thumb96.jpeg",
     /// ).unwrap();
+    /// thumb.attributes_mut().insert("z_slice".to_string(), serde_json::json!(123));
+    /// thumb.description_mut().replace("A test thumbnail".to_string());
     /// ```
     pub fn try_new(
         width: u32,
@@ -170,13 +211,49 @@ impl Thumbnail {
         if media_type.is_empty() {
             return Err("Thumbnail media_type must not be empty".to_string());
         }
+        let uri = UriRefBuf::from_string(uri.into()).map_err(|e| format!("Invalid URI: {e}"))?;
+        match uri.scheme() {
+            Some(scheme) if scheme == Scheme::HTTP || scheme == Scheme::HTTPS => {
+                // HTTP(S) URL
+            }
+            Some(scheme) if scheme == Scheme::DATA => {
+                let remainder = &uri.as_str()[Scheme::DATA.len() + 1..];
+                if !remainder.starts_with(&media_type) {
+                    return Err(format!(
+                        "Data URI media type must match the thumbnail media type '{media_type}'"
+                    ));
+                }
+                let remainder = &remainder[media_type.len()..];
+                let expected = ";base64,";
+                if !remainder.starts_with(expected) {
+                    return Err("Data URI must contain ';base64,' after the media type".to_string());
+                }
+                // let remainder = &remainder[expected.len()..];
+                // for c in remainder.chars() {
+                //     if !c.is_ascii_alphanumeric() && c != '+' && c != '/' && c != '=' {
+                //         return Err("Data URI contains invalid base64 characters".to_string());
+                //     }
+                // }
+            }
+            Some(scheme) => {
+                return Err(format!(
+                    "URI scheme must be {}, {}, or {}, got '{scheme}'",
+                    Scheme::HTTP,
+                    Scheme::HTTPS,
+                    Scheme::DATA
+                ));
+            }
+            None => {
+                // relative reference
+            }
+        }
         Ok(Self {
             width,
             height,
             media_type,
             description: None,
             attributes: serde_json::Map::new(),
-            uri: UriRefBuf::from_string(uri.into()).map_err(|e| format!("Invalid URI: {e}"))?,
+            uri,
         })
     }
 
@@ -252,7 +329,7 @@ mod tests {
     #[test]
     fn pass_expected_with_path() {
         let value = json!({
-            "zarr_conventions": [{"uuid": Thumbnails::DEFINITION.uuid}],
+            "zarr_conventions": [{"schema_url": Thumbnails::DEFINITION.schema_url}],
             "thumbnails": [
                 {
                     "width": 96,
@@ -272,7 +349,7 @@ mod tests {
     #[test]
     fn pass_expected_with_url() {
         let value = json!({
-            "zarr_conventions": [{"uuid": Thumbnails::DEFINITION.uuid}],
+            "zarr_conventions": [{"schema_url": Thumbnails::DEFINITION.schema_url}],
             "thumbnails": [
                 {
                     "width": 48,
@@ -291,7 +368,7 @@ mod tests {
     #[test]
     fn fail_missing_location() {
         let value = json!({
-            "zarr_conventions": [{"uuid": Thumbnails::DEFINITION.uuid}],
+            "zarr_conventions": [{"schema_url": Thumbnails::DEFINITION.schema_url}],
             "thumbnails": [
                 {
                     "width": 96,
