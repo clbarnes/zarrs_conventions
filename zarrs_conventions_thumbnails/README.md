@@ -7,14 +7,14 @@ This convention allows a Zarr node to refer to thumbnails which represent that n
 ## Usage
 
 ```rust
-use zarrs_conventions_thumbnails::{Thumbnails, Thumbnail, ThumbnailLocation};
+use zarrs_conventions_thumbnails::v2::{Thumbnails, Thumbnail};
 
 // Create a thumbnail with a path
 let mut thumb = Thumbnail::try_new(
     96,
     96,
     "image/jpeg",
-    ThumbnailLocation::new_path("thumbnails/thumb96.jpeg"),
+    "thumbnails/thumb96.jpeg",
 ).unwrap();
 
 // Set optional description
