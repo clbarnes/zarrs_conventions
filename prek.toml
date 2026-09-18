@@ -17,7 +17,7 @@ hooks = [
     { id = "cargo-clippy", name = "cargo clippy", entry = "cargo clippy --workspace --all-targets --all-features -- -D warnings", language = "system", types = [
         "rust",
     ], pass_filenames = false },
-    { id = "cargo-test", name = "cargo test", entry = "cargo test --workspace --all-targets --all-features -- -D warnings", language = "system", types = [
+    { id = "cargo-test", name = "cargo test", entry = "cargo test --workspace --all-targets --all-features", language = "system", types = [
         "rust",
     ], stages = ["pre-push"], pass_filenames = false },
 ]
