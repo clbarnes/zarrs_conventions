@@ -27,4 +27,10 @@ assert!(!is_new2);
 let maybe_index3 = encoder.encode("potato");
 assert_eq!(maybe_index3, Some(0));
 
+let decoder = EnumDecoder::from(encoder);
+let name = decoder.decode(0);
+assert_eq!(name, Some("potato"));
+
+let not_name = decoder.decode(999);
+assert!(name.is_none());
 ```
