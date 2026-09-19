@@ -1,5 +1,5 @@
 #![doc = include_str!("../README.md")]
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, fmt::Display};
 
 /// Used for representing URLs.
 pub use iref;
@@ -59,6 +59,16 @@ impl From<Convention> for ConventionId {
             Self::SpecUrl(i)
         } else {
             unreachable!("one identifier must be defined")
+        }
+    }
+}
+
+impl Display for ConventionId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ConventionId::Uuid(uuid) => uuid.fmt(f),
+            ConventionId::SchemaUrl(uri_buf) => uri_buf.fmt(f),
+            ConventionId::SpecUrl(uri_buf) => uri_buf.fmt(f),
         }
     }
 }

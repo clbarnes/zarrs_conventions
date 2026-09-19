@@ -6,7 +6,7 @@ resolver = "3"
 [workspace.dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-iref = { version = "3.2.2", features = ["macros", "serde"] }
+iref = { version = "4.0", features = ["serde"] }
 ctor = { version = "0.6.3", default-features = false, features = [
     "__no_warn_on_missing_unsafe",
     "proc_macro",
