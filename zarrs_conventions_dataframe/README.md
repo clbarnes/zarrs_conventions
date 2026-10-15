@@ -12,5 +12,5 @@ use zarrs_conventions_dataframe::DataFrameMeta;
 let meta = DataFrameMeta::new(vec!["a".into(), "b".into(), "c".into()]);
 
 // Constructing with an index is fallible as the index may be out of bounds
-let with_index = DataFrameMeta::new_with_index(vec!["i".into(), "a".into(), "b".into(), "c".into()], 0).unwrap();
+let with_index = meta.with_index(0).unwrap();
 ```
