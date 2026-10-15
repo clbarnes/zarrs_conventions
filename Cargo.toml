@@ -13,3 +13,5 @@ ctor = { version = "0.6.3", default-features = false, features = [
 ] }
 rstest = "0.26.1"
 uuid = { version = "1.19.0", features = ["serde"] }
+zarrs_conventions = { path = "zarrs_conventions", version = "0.1.1" }
+zarrs = "0.23.14"
