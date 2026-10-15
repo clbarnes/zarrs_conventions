@@ -10,3 +10,9 @@
 [submodule "zarrs_conventions_thumbnails/spec"]
 	path = zarrs_conventions_thumbnails/spec
 	url = https://github.com/clbarnes/zarr-convention-thumbnails.git
+[submodule "zarrs_conventions_enum/spec"]
+	path = zarrs_conventions_enum/spec
+	url = https://github.com/ilan-gold/zarr-convention-enum.git
+[submodule "zarrs_conventions_dataframe/spec"]
+	path = zarrs_conventions_dataframe/spec
+	url = https://github.com/ilan-gold/zarr-convention-dataframe.git
