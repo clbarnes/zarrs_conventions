@@ -1,0 +1,19 @@
+[package]
+name = "zarrs_conventions_inline_array"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+zarrs_conventions = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+iref = { workspace = true }
+ctor = { workspace = true }
+zarrs = { workspace = true, optional = true, default_features = false }
+
+[features]
+default = ["zarrs"]
+zarrs = ["dep:zarrs"]
+
+[dev-dependencies]
+rstest = { workspace = true }
