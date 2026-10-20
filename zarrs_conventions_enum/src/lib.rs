@@ -1,5 +1,4 @@
 #![doc = include_str!("../README.md")]
-use ordermap::OrderSet;
 use serde::{Deserialize, Serialize};
 pub use zarrs_conventions;
 use zarrs_conventions::{
@@ -10,8 +9,11 @@ use zarrs_conventions::{
 /// Metadata for dictionary-encoded enum arrays.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnumMeta {
+    /// Whether the codes in the `enum_values` array are in sorted order.
     ordered: bool,
-    codes: OrderSet<String>,
+    /// Paths to zarr arrays of integer codes,
+    /// indexing into a values array.
+    pub codes: Vec<String>,
 }
 
 impl ZarrConventionImpl for EnumMeta {
@@ -29,112 +31,37 @@ impl ZarrConventionImpl for EnumMeta {
 }
 
 impl EnumMeta {
-    pub fn builder() -> EnumBuilder {
-        Default::default()
+    pub fn new(ordered: bool, codes: Vec<String>) -> Self {
+        Self { ordered, codes }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item = &str> {
-        self.codes.iter().map(|s| s.as_str())
+    pub fn from_values<T: PartialOrd + Clone>(
+        codes: Vec<String>,
+        values: impl IntoIterator<Item = T>,
+    ) -> Self {
+        let mut last_val = None;
+        for val in values.into_iter() {
+            if last_val.is_some_and(|last| val < last) {
+                return Self {
+                    ordered: false,
+                    codes,
+                };
+            }
+            last_val = Some(val);
+        }
+        Self {
+            ordered: true,
+            codes,
+        }
     }
 
     pub fn ordered(&self) -> bool {
         self.ordered
     }
-
-    pub fn encode(&self, value: impl AsRef<str>) -> Option<usize> {
-        let s = value.as_ref();
-        self.codes.get_index_of(s)
-    }
-
-    pub fn decode(&self, index: usize) -> Option<&str> {
-        self.codes.get_index(index).map(|s| s.as_str())
-    }
-}
-
-impl From<EnumBuilder> for EnumMeta {
-    fn from(builder: EnumBuilder) -> Self {
-        builder.build()
-    }
-}
-
-impl From<EnumMeta> for EnumBuilder {
-    fn from(meta: EnumMeta) -> Self {
-        Self {
-            ordered: meta.ordered,
-            codes: meta.codes,
-        }
-    }
-}
-
-/// Builder for [EnumMeta].
-#[derive(Debug, Clone)]
-pub struct EnumBuilder {
-    ordered: bool,
-    codes: OrderSet<String>,
-}
-
-impl Default for EnumBuilder {
-    fn default() -> Self {
-        Self {
-            ordered: true,
-            codes: Default::default(),
-        }
-    }
-}
-
-impl EnumBuilder {
-    pub fn add_code(&mut self, code: impl Into<String>) -> &mut Self {
-        let code = code.into();
-        if self.ordered
-            && let Some(last) = self.codes.last()
-            && last > &code
-        {
-            self.ordered = false;
-        }
-        self.codes.insert(code);
-        self
-    }
-
-    pub fn add_codes<I, C>(&mut self, codes: I) -> &mut Self
-    where
-        I: IntoIterator<Item = C>,
-        C: Into<String>,
-    {
-        for code in codes {
-            self.add_code(code);
-        }
-        self
-    }
-
-    pub fn sort(&mut self) -> &mut Self {
-        if self.ordered {
-            return self;
-        }
-        self.codes.sort_unstable();
-        self.ordered = true;
-        self
-    }
-
-    pub fn build(self) -> EnumMeta {
-        EnumMeta {
-            ordered: self.ordered,
-            codes: self.codes,
-        }
-    }
 }
 
 impl PrefixedRepr for EnumMeta {
     const PREFIX: &'static str = "enum:";
-}
-
-impl<C: Into<String>> FromIterator<C> for EnumMeta {
-    fn from_iter<T: IntoIterator<Item = C>>(iter: T) -> Self {
-        let mut b = Self::builder();
-        for code in iter {
-            b.add_code(code);
-        }
-        b.build()
-    }
 }
 
 register_zarr_conventions!(EnumMeta);
@@ -143,8 +70,7 @@ register_zarr_conventions!(EnumMeta);
 mod tests {
     use serde_json::json;
     use zarrs_conventions::{
-        AttributesBuilder, AttributesParser, ConventionId, DEFAULT_ZARR_CONVENTION_REGISTRY,
-        ZarrConventionImpl,
+        AttributesParser, ConventionId, DEFAULT_ZARR_CONVENTION_REGISTRY, ZarrConventionImpl,
     };
 
     use crate::EnumMeta;
@@ -175,7 +101,7 @@ mod tests {
             "enum:codes": ["a", "b", "c"]
         });
         let parser: AttributesParser = serde_json::from_value(value).unwrap();
-        let _license: EnumMeta = parser.parse_prefixed().unwrap().unwrap();
+        let _meta: EnumMeta = parser.parse_prefixed().unwrap().unwrap();
     }
 
     #[test]
@@ -185,18 +111,5 @@ mod tests {
         });
         let parser: AttributesParser = serde_json::from_value(value).unwrap();
         assert!(parser.parse_prefixed::<EnumMeta>().is_err());
-    }
-
-    #[test]
-    fn can_build() {
-        let mut ebuilder = EnumMeta::builder();
-        ebuilder.add_code("a").add_code("b").add_code("c").sort();
-
-        let enum_meta = ebuilder.build();
-        let mut builder = AttributesBuilder::default();
-        builder.add_prefixed(&enum_meta).unwrap();
-        let attributes = builder.build().unwrap();
-        let parser: AttributesParser = serde_json::from_value(attributes).unwrap();
-        let _enum: EnumMeta = parser.parse_prefixed().unwrap().unwrap();
     }
 }
