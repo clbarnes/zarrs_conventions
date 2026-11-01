@@ -273,6 +273,8 @@ checksum = "cc4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855"
 dependencies = [
  "equivalent",
  "hashbrown",
+ "serde",
+ "serde_core",
 ]
 
 [[package]]
@@ -367,6 +369,17 @@ name = "once_cell"
 version = "1.21.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
+
+[[package]]
+name = "ordermap"
+version = "1.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16a756ddcdeb6c0efc8927bdf0ed112885815a35ba350472a467be5104f01ca1"
+dependencies = [
+ "indexmap",
+ "serde",
+ "serde_core",
+]
 
 [[package]]
 name = "pct-str"
@@ -828,8 +841,8 @@ name = "zarrs_conventions_enum"
 version = "0.1.0"
 dependencies = [
  "ctor",
- "indexmap",
  "iref",
+ "ordermap",
  "rstest",
  "serde",
  "serde_json",

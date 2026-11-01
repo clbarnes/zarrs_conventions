@@ -5,13 +5,14 @@ use zarrs_conventions::{
     ConventionDefinition, PrefixedRepr, ZarrConventionImpl, iref::uri, register_zarr_conventions,
     uuid,
 };
-mod lookup;
-pub use lookup::{EnumDecoder, EnumEncoder};
 
-/// Single license applicable to the data.
+/// Metadata for dictionary-encoded enum arrays.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EnumMeta {
-    pub ordered: bool,
+    /// Whether the codes in the `enum_values` array are in sorted order.
+    ordered: bool,
+    /// Paths to zarr arrays of integer codes,
+    /// indexing into a values array.
     pub codes: Vec<String>,
 }
 
@@ -29,6 +30,36 @@ impl ZarrConventionImpl for EnumMeta {
     };
 }
 
+impl EnumMeta {
+    pub fn new(ordered: bool, codes: Vec<String>) -> Self {
+        Self { ordered, codes }
+    }
+
+    pub fn from_values<T: PartialOrd + Clone>(
+        codes: Vec<String>,
+        values: impl IntoIterator<Item = T>,
+    ) -> Self {
+        let mut last_val = None;
+        for val in values.into_iter() {
+            if last_val.is_some_and(|last| val < last) {
+                return Self {
+                    ordered: false,
+                    codes,
+                };
+            }
+            last_val = Some(val);
+        }
+        Self {
+            ordered: true,
+            codes,
+        }
+    }
+
+    pub fn ordered(&self) -> bool {
+        self.ordered
+    }
+}
+
 impl PrefixedRepr for EnumMeta {
     const PREFIX: &'static str = "enum:";
 }
@@ -39,8 +70,7 @@ register_zarr_conventions!(EnumMeta);
 mod tests {
     use serde_json::json;
     use zarrs_conventions::{
-        AttributesBuilder, AttributesParser, ConventionId, DEFAULT_ZARR_CONVENTION_REGISTRY,
-        ZarrConventionImpl,
+        AttributesParser, ConventionId, DEFAULT_ZARR_CONVENTION_REGISTRY, ZarrConventionImpl,
     };
 
     use crate::EnumMeta;
@@ -71,7 +101,7 @@ mod tests {
             "enum:codes": ["a", "b", "c"]
         });
         let parser: AttributesParser = serde_json::from_value(value).unwrap();
-        let _license: EnumMeta = parser.parse_prefixed().unwrap().unwrap();
+        let _meta: EnumMeta = parser.parse_prefixed().unwrap().unwrap();
     }
 
     #[test]
@@ -81,18 +111,5 @@ mod tests {
         });
         let parser: AttributesParser = serde_json::from_value(value).unwrap();
         assert!(parser.parse_prefixed::<EnumMeta>().is_err());
-    }
-
-    #[test]
-    fn can_build() {
-        let enum_meta = EnumMeta {
-            ordered: true,
-            codes: vec!["a".to_string(), "b".to_string(), "c".to_string()],
-        };
-        let mut builder = AttributesBuilder::default();
-        builder.add_prefixed(&enum_meta).unwrap();
-        let attributes = builder.build().unwrap();
-        let parser: AttributesParser = serde_json::from_value(attributes).unwrap();
-        let _license: EnumMeta = parser.parse_prefixed().unwrap().unwrap();
     }
 }

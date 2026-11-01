@@ -6,7 +6,7 @@ use zarrs_conventions::{
     uuid,
 };
 
-/// Single license applicable to the data.
+/// Metadata describing a dataframe's columns and optionally an index column.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(try_from = "DataFrameSerde", into = "DataFrameSerde")]
 pub struct DataFrameMeta {
@@ -15,6 +15,9 @@ pub struct DataFrameMeta {
 }
 
 impl DataFrameMeta {
+    /// Create a new DataFrameMeta with the given columns and no index.
+    ///
+    /// Use [Self::with_index] to set an index column.
     pub fn new(columns: Vec<String>) -> Self {
         Self {
             index: None,
@@ -22,20 +25,24 @@ impl DataFrameMeta {
         }
     }
 
-    pub fn new_with_index(columns: Vec<String>, index: usize) -> Result<Self, String> {
-        if index >= columns.len() {
+    /// Select which column is the dataframe index, by its index in the columns vec.
+    ///
+    /// Errors if the index greater than the number of columns.
+    pub fn with_index(self, index: usize) -> Result<Self, String> {
+        if index >= self.columns.len() {
             return Err(format!(
                 "Index {} is out of bounds for columns of length {}",
                 index,
-                columns.len()
+                self.columns.len()
             ));
         }
         Ok(Self {
             index: Some(index),
-            columns,
+            columns: self.columns,
         })
     }
 
+    /// Get the index column name, if any.
     pub fn index(&self) -> Option<&str> {
         Some(
             self.columns
@@ -165,7 +172,7 @@ mod tests {
 
     #[test]
     fn fail_index_oob() {
-        let result = DataFrameMeta::new_with_index(vec!["a".to_string(), "b".to_string()], 2);
+        let result = DataFrameMeta::new(vec!["a".to_string(), "b".to_string()]).with_index(2);
         assert!(result.is_err());
     }
 
