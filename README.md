@@ -5,11 +5,14 @@ An implementation of [zarr-conventions](https://github.com/zarr-conventions) for
 The core crate implementing the [zarr-conventions spec](https://github.com/zarr-conventions/zarr-conventions-spec) is [zarrs_conventions](./zarrs_conventions/).
 There are also crates for
 
-- [license](https://github.com/clbarnes/zarr-convention-license/): [zarrs_conventions_license](./zarrs_conventions_license/)
-- [uom](https://github.com/clbarnes/zarr-convention-uom/): [zarrs_conventions_uom](./zarrs_conventions_uom/)
-- [thumbnails](https://github.com/clbarnes/zarr-convention-thumbnails/): [zarrs_conventions_thumbnails](./zarrs_conventions_thumbnails/)
-- [enum](https://github.com/ilan-gold/zarr-convention-enum): [zarrs_conventions_enum](./zarrs_conventions_enum/)
-- [thumbnails](https://github.com/ilan-gold/zarr-convention-dataframe): [zarrs_conventions_dataframe](./zarrs_conventions_dataframe/)
+| convention   | homepage                                                         | crate                                                               |
+| ------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------- |
+| license      | <https://github.com/clbarnes/zarr-convention-license/>           | [zarrs_conventions_license](./zarrs_conventions_license/)           |
+| uom          | <https://github.com/clbarnes/zarr-convention-uom/>               | [zarrs_conventions_uom](./zarrs_conventions_uom/)                   |
+| thumbnails   | <https://github.com/clbarnes/zarr-convention-thumbnails/>        | [zarrs_conventions_thumbnails](./zarrs_conventions_thumbnails/)     |
+| enum         | <https://github.com/ilan-gold/zarr-convention-enum>              | [zarrs_conventions_enum](./zarrs_conventions_enum/)                 |
+| dataframe    | <https://github.com/ilan-gold/zarr-convention-dataframe>         | [zarrs_conventions_dataframe](./zarrs_conventions_dataframe/)       |
+| inline-array | <https://github.com/clbarnes/zarr_conventions_inline_array>      | [zarrs_conventions_inline_array](./zarrs_conventions_inline_array/) |
 
 See the respective crate docs for usage examples.
 
