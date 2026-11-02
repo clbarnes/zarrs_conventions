@@ -9,6 +9,10 @@ mod serde_repr;
 pub use errors::{Error, Result};
 #[cfg(feature = "zarrs")]
 mod zarrs_impl;
+#[cfg(feature = "zarrs")]
+pub use zarrs;
+#[cfg(feature = "zarrs")]
+pub use zarrs_impl::InlineArrayBytes;
 
 pub type Configuration = serde_json::Map<String, serde_json::Value>;
 pub type FillValue = serde_json::Value;
@@ -175,6 +179,18 @@ impl InlineArrayBuilder {
 
     pub fn attributes_mut(&mut self) -> &mut serde_json::Map<String, serde_json::Value> {
         &mut self.attributes
+    }
+}
+
+impl From<InlineArray> for InlineArrayBuilder {
+    fn from(array: InlineArray) -> Self {
+        Self {
+            values: array.values,
+            data_type: Some(array.data_type),
+            shape: Some(array.shape),
+            dimension_names: array.dimension_names,
+            attributes: array.attributes,
+        }
     }
 }
 

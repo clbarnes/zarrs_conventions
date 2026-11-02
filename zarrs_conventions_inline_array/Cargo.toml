@@ -14,6 +14,7 @@ zarrs = { workspace = true, optional = true, default_features = false }
 [features]
 default = ["zarrs"]
 zarrs = ["dep:zarrs"]
+zarrs_ndarray = ["zarrs/ndarray"]
 
 [dev-dependencies]
 rstest = { workspace = true }
