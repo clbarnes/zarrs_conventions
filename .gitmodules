@@ -16,3 +16,6 @@
 [submodule "zarrs_conventions_dataframe/spec"]
 	path = zarrs_conventions_dataframe/spec
 	url = https://github.com/ilan-gold/zarr-convention-dataframe.git
+[submodule "zarrs_conventions_inline_array/spec"]
+	path = zarrs_conventions_inline_array/spec
+	url = https://github.com/clbarnes/zarr-convention-inline-array.git
